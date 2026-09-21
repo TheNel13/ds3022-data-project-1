@@ -1,0 +1,22 @@
+# DuckDB database
+*.duckdb
+
+# Logs
+*.log
+
+# Raw data files (never commit these)
+*.parquet
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# OS junk
+.DS_Store
