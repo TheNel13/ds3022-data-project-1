@@ -32,6 +32,11 @@ TAXI_CONFIG = {
 }
 
 def load_parquet_files():
+    """Connect to a local DuckDB database and load three tables:
+    vehicle_emissions (from the local CSV), yellow_trips, and
+    green_trips (both pulled directly from NYC TLC's 2024 Parquet
+    files, one month at a time). Prints and logs raw row counts for
+    each table before any cleaning is applied."""
 
     con = None
 
@@ -79,6 +84,36 @@ def load_parquet_files():
         n = con.execute("SELECT COUNT(*) FROM yellow_trips").fetchone()[0]
         print(f"yellow_trips: {n} rows loaded (raw)")
         logger.info(f"yellow_trips: {n} rows loaded (raw)")
+
+        # Checkpoint 3: load GREEN taxi trips for all of 2024.
+        con.execute("DROP TABLE IF EXISTS green_trips")
+        config = TAXI_CONFIG["green"]
+
+        for month in MONTHS:
+            url = f"{TLC_BASE_URL}/green_tripdata_{YEAR}-{month:02d}.parquet"
+            select_sql = f"""
+                SELECT
+                    {config['pickup_col']}  AS pickup_time,
+                    {config['dropoff_col']} AS dropoff_time,
+                    passenger_count,
+                    trip_distance
+                FROM read_parquet('{url}')
+            """
+
+            table_exists = con.execute(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'green_trips'"
+            ).fetchone()[0]
+
+            if not table_exists:
+                con.execute(f"CREATE TABLE green_trips AS {select_sql}")
+            else:
+                con.execute(f"INSERT INTO green_trips {select_sql}")
+
+            logger.info(f"green_trips: loaded month {month:02d}/{YEAR}")
+
+        n = con.execute("SELECT COUNT(*) FROM green_trips").fetchone()[0]
+        print(f"green_trips: {n} rows loaded (raw)")
+        logger.info(f"green_trips: {n} rows loaded (raw)")
 
     except Exception as e:
         print(f"An error occurred: {e}")
