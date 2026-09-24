@@ -1,7 +1,5 @@
 # DS3022 - Data Project 1 (Fall 2025)
 
-# DS 3022 – Data Project 1: NYC Taxi CO2 Pipeline
-
 ## What this pipeline does
 
 This project builds a small ELT pipeline that estimates CO2 output for NYC
